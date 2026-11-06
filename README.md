@@ -1,109 +1,153 @@
-# Cryptocurrency Transactions & Market Analysis | PostgreSQL
+# Cryptocurrency Market & Trading Analysis | PostgreSQL
 
-A SQL portfolio project built around cryptocurrency market prices, member information, and buy/sell transaction records. It provides a relational dataset for exploring trading activity, member segments, and historical BTC/ETH price movements using PostgreSQL.
+A SQL portfolio project using historical Bitcoin (BTC) and Ethereum (ETH) market data alongside member and transaction records. The original SQL script builds the relational tables and explores market-price behaviour, member geography, and trading activity.
 
-> **Scope note:** The repository currently contains database setup and source data. The additional analytical query pack in `sql/02_analysis_queries.sql` makes the intended business questions reproducible. Query outputs are not presented as findings until they have been run and validated.
+## Project objective
 
-## Project overview
+The project demonstrates how SQL can combine market observations with trading and member information to support questions relevant to a cryptocurrency platform:
 
-The project brings together three data entities:
+- How does each asset's market price behave over time?
+- How frequently do recorded prices finish above or below their opening price?
+- How is trading activity split between buys and sells?
+- Which members and regions appear in the supplied member dataset?
+- What patterns can be explored in member-level BTC activity?
 
-- **Members** — member identifier, first name, and region.
-- **Prices** — ticker, market date, price, open, high, low, volume, and daily change.
-- **Transactions** — transaction identifier, member, asset ticker, transaction date, buy/sell type, quantity, and recorded percentage fee.
+This is a historical dataset exercise, not a live market tracker or investment recommendation.
 
-The supplied examples include Bitcoin (BTC) and Ethereum (ETH) records and historical dates from 2020.
+## Dataset overview
 
-## Business questions
+The repository contains three CSV source files and an SQL script with table definitions and insert statements.
 
-The SQL analysis pack is designed to answer:
+| File / table | Grain | Main fields |
+|---|---|---|
+| `members.csv` / `members` | One row per member | `member_id`, `first_name`, `region` |
+| `prices.csv` / `prices` | One row per asset per market date | `ticker`, `market_date`, `price`, `open`, `high`, `low`, `volume`, `change` |
+| `transactions.csv` / `transactions` | One row per transaction | `txn_id`, `member_id`, `ticker`, `txn_date`, `txn_type`, `quantity`, `percentage_fee` |
 
-1. How many buy and sell transactions were recorded for each cryptocurrency?
-2. What quantity was traded by asset and transaction type?
-3. Which regions have the most active members?
-4. Which members have the highest transaction counts?
-5. How did each asset's recorded market price change over time?
-6. What is the daily high-low trading range for each asset?
-7. What is the estimated transaction notional when quantity is matched to the same day's recorded market price?
+The supplied data includes BTC and ETH market records for 2020. The original SQL script contains insert statements for all three tables: 732 price records, 5,047 transaction records, and 14 member records. The `members.csv` file is also provided separately as a source-data copy.
 
-## SQL skills demonstrated
+## Analysis performed in the original SQL
 
-- Relational table design and primary keys
-- Data loading and date conversion
-- Filtering, grouping, and aggregation
-- Multi-table joins
-- Common table expressions
-- Window functions with `LAG()`
-- Numeric calculations and `NULLIF()`
-- Business interpretation of transaction and market data
+### 1. Member and regional analysis
+
+- Sort members alphabetically and retrieve the first three records.
+- Filter members from the United States.
+- Retrieve member IDs and names for members outside Australia.
+- List distinct regions in reverse alphabetical order.
+- Count members by region and rank regions by member count.
+- Group members into United States and non-United States categories.
+
+**Business relevance:** A platform team could use member distribution to understand the geographic composition of the supplied user base and to frame regional engagement or customer-support questions.
+
+### 2. Market data coverage and quality
+
+- Count records in the price table.
+- Count records by cryptocurrency ticker.
+- Retrieve the minimum and maximum market dates for each ticker.
+- Compare total market-date records with distinct market dates by ticker.
+- Count BTC records where the daily high is above 20,000.
+
+**Business relevance:** These checks help establish the time coverage and completeness of market observations before calculating trends or comparing assets. The BTC high-price filter identifies dates meeting a chosen historical threshold in this dataset; it is not a current-price signal.
+
+### 3. Price movement and breakout analysis
+
+- Calculate monthly average ETH price for 2020, rounded to two decimal places.
+- Count breakout days by ticker, where recorded `price > open`.
+- Count non-breakout days where `price < open`.
+- Calculate breakout and non-breakout percentages by ticker.
+
+**Business relevance:** These metrics can help compare the frequency of positive versus negative close/open sessions and summarize monthly price levels. They are descriptive indicators, not a complete volatility or investment-performance model.
+
+**Definition note:** In this SQL, a breakout day is defined as `price > open`. The percentage query groups `price <= open` into the non-breakout bucket, so a day where price equals open is included there even though the separate non-breakout count uses strictly less than open.
+
+### 4. Trading activity and member behaviour
+
+- Count BTC buy and sell transactions by transaction type.
+- Calculate BTC quantity sold by member and return members below the 500 BTC threshold.
+- Calculate a member-level buy-to-sell ratio using transaction counts.
+- Join transactions to members and attempt to rank members by BTC quantity.
+
+**Business relevance:** These queries form a starting point for understanding transaction mix, identifying active members, and exploring member-level trading behaviour. A production analytics team could extend this into customer segmentation, trading frequency, and asset-level activity reporting.
+
+## Business insights and interpretation opportunities
+
+The original queries can support the following business discussions:
+
+- **Geographic footprint:** Regional member counts provide a basic view of where the listed members are located. This can inform questions about regional adoption and engagement.
+- **Market movement:** Monthly ETH averages and BTC/ETH breakout percentages provide a compact summary of historical price behaviour during 2020.
+- **Trading mix:** BTC buy-versus-sell counts help describe the composition of recorded trading activity.
+- **Member activity:** Member-level sell quantities can help identify higher-volume sellers and members below a selected trading threshold.
+- **Data reliability:** Date-range and duplicate-date checks help determine whether market series are suitable for daily or monthly reporting.
+
+These are business interpretations of the questions encoded in the original SQL, not claims that a particular region, member, or cryptocurrency performed best. No numeric findings are stated because query outputs have not been captured and validated in this repository.
+
+## SQL concepts demonstrated
+
+| Concept | Application in the project |
+|---|---|
+| DDL and constraints | Creating tables and primary keys |
+| Data loading | Populating tables through SQL `INSERT` statements |
+| Filtering | Region, ticker, transaction type, year, and price conditions |
+| Sorting and limiting | Alphabetical member lists and ranked outputs |
+| Aggregation | `COUNT`, `SUM`, `AVG`, `MIN`, `MAX` |
+| Grouping | Region, ticker, month, and transaction-type summaries |
+| Conditional aggregation | `CASE WHEN` for breakout and transaction categories |
+| CTEs | Aggregating BTC sales by member before filtering |
+| Joins | Connecting transactions to member information |
+| Date functions | `EXTRACT` and monthly/year-based analysis |
+| Numeric calculations | Percentages and buy/sell comparisons |
 
 ## Repository structure
 
 ```text
 SQL-Project-Crypto/
-├── CRYPTO.sql                 # Creates and populates prices and transactions
-├── members.csv                # Member lookup data
-├── prices.csv                 # Historical market-price source data
-├── transactions.csv           # Transaction source data
-├── README.md
-└── sql/
-    ├── 01_members_schema.sql   # Creates and imports the members table
-    └── 02_analysis_queries.sql # Reproducible analytical SQL examples
+├── CRYPTO.sql          # Creates and populates tables, followed by analysis queries
+├── members.csv         # Member reference data
+├── prices.csv          # Historical BTC/ETH market data
+├── transactions.csv    # Buy/sell transaction records
+└── README.md           # Project documentation
 ```
 
-## Tech stack
+## Technology
 
 - PostgreSQL
 - SQL
 - CSV datasets
 
-## Run the project
+## How to run
 
-Use a PostgreSQL database and run the commands from the repository root.
-
-### 1. Create the price and transaction tables
+1. Create a PostgreSQL database.
+2. Open a PostgreSQL terminal or use pgAdmin.
+3. Execute the original SQL script:
 
 ```bash
 psql -d your_database_name -f CRYPTO.sql
 ```
 
-The existing script creates and populates the `prices` and `transactions` tables.
+The script creates and populates `prices`, `transactions`, and `members`, then runs the exploratory queries near the end of the file. The separate CSV files are included as source data; the SQL script uses embedded insert statements rather than importing those CSVs.
 
-### 2. Create and load the members table
+## Important SQL review notes
 
-```bash
-psql -d your_database_name -f sql/01_members_schema.sql
-```
+The original analysis is preserved and documented, but a few queries should be reviewed before using their outputs for business decisions:
 
-The members setup script creates the table and uses `psql \\copy` to load `members.csv`. Run it from the repository root so the relative CSV path resolves.
+- The buy-to-sell ratio query sums 1/0 flags, so it counts transactions rather than traded quantity. Its integer division can also truncate fractional ratios, and a member with no sell transactions can cause a division-by-zero issue. A robust version should use decimal arithmetic and `NULLIF()`.
+- The final BTC quantity query is labelled as a member holdings calculation, but both branches of its `CASE` expression currently add quantity for `BUY`. It does not subtract `SELL` quantities, and it has no explicit descending sort before `LIMIT 3`. Therefore, it should not be interpreted as a validated net-holdings ranking.
+- The breakout percentage query treats `price = open` as non-breakout, while the separate non-breakout count uses `price < open`.
+- The meaning and calculation basis of `percentage_fee` are not defined in the repository. Avoid converting it into a currency fee without confirming its business definition.
+- The market `price` field is a daily market observation. It should not automatically be treated as the execution price for an individual transaction.
+- The repository does not currently identify the original data publisher or dataset licence. Add source attribution and permitted-use details if available.
 
-### 3. Run the analysis queries
+## Future enhancements
 
-```bash
-psql -d your_database_name -f sql/02_analysis_queries.sql
-```
-
-If you use pgAdmin instead of `psql`, create the members table using the DDL in `sql/01_members_schema.sql`, then import `members.csv` with the Import/Export feature. The `\\copy` line is a psql client command, not standard SQL.
-
-## Data and interpretation notes
-
-- `CRYPTO.sql` contains table creation and bulk `INSERT` statements for `prices` and `transactions`. The member lookup is supplied separately as `members.csv`.
-- `transactions.csv` currently includes extra trailing empty columns in its CSV header/rows. The existing SQL insert script is the straightforward route for loading transactions; do not import that CSV directly into the seven-column table without cleaning or staging it first.
-- The notional-value query uses the recorded daily `price` as a proxy for execution price. It is an estimate, not an exchange-confirmed fill value.
-- The meaning and scale of `percentage_fee` are not documented, so the analysis pack does not convert it into a currency fee or assume a percentage convention.
-- The repository does not currently identify the original data publisher or dataset licence. Add provenance and permitted-use details if available.
-- This is a historical dataset exercise, not investment advice or a representation of current market prices.
-
-## Possible next improvements
-
-- Add validated query output tables and a concise findings section.
-- Add a data dictionary and document the source and licence of each dataset.
-- Add data-quality checks for missing member references, duplicate transaction IDs, and unmatched price dates.
-- Consider indexes on `transactions(member_id)`, `transactions(ticker, txn_date)`, and `prices(ticker, market_date)` after measuring query performance.
+- Validate and correct the member buy/sell ratio and net BTC holdings logic.
+- Add validated result screenshots or result tables for the major analysis sections.
+- Document the definition and unit of `percentage_fee`.
+- Add data-quality checks for transaction member references, duplicate transaction IDs, and matching transaction dates to market dates.
+- Add a concise data dictionary and dataset provenance.
 
 ## Author
 
 **Raj Kishore Agrawal**
 
-- [LinkedIn](https://www.linkedin.com/in/rajagrawal1/)
 - [GitHub](https://github.com/rraj12345)
+- [LinkedIn](https://www.linkedin.com/in/rajagrawal1/)
