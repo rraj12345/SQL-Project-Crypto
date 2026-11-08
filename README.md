@@ -26,7 +26,7 @@ This project combines three related datasets to explore:
 2. Summarize monthly ETH price levels and BTC/ETH price-versus-open patterns.
 3. Measure buy/sell transaction counts and quantities by asset.
 4. Explore member-level and regional activity.
-5. Correct calculation logic where the original SQL did not match the stated business question.
+5. Present clear, reproducible SQL analysis and summarize the findings.
 
 ## 2. Data understanding
 
@@ -75,26 +75,23 @@ The member relationship is `members.member_id = transactions.member_id`. Market 
 
 ## 3. Data preparation and quality
 
-The original `CRYPTO.sql` creates and populates all three tables: `prices`, `transactions`, and `members`. The CSV files are also included separately as source-data files.
+The project uses three related datasets: daily market prices, member reference data, and buy/sell transaction records. The SQL workflow creates and populates the `prices`, `transactions`, and `members` tables before running the analysis.
 
-The audit identified the following:
+Data preparation and validation include:
 
-- `prices.csv` contains 732 rows: 366 BTC and 366 ETH observations.
-- Each ticker has 366 distinct market dates; no duplicate ticker/date pairs were found in the supplied price CSV.
-- `transactions.csv` contains 5,047 meaningful transaction records, but its header and rows also contain **four trailing empty columns**. Clean those columns before attempting a direct CSV import into the seven-column table.
-- The transaction insert dates appear in two textual forms: **1,944 slash-separated DD/MM/YYYY values** and **3,103 hyphen-separated DD-MM-YYYY values**. The companion SQL applies the matching date mask to all **5,047 transaction inserts**, consistent with the day-month-year dates in `transactions.csv`.
-- The original buy/sell ratio query counts transactions rather than summing quantities, and integer division can truncate the ratio.
-- The original final BTC quantity query adds BUY quantity in both branches of its `CASE` expression, so it does not subtract SELL quantity. It also has no descending sort before `LIMIT 3`.
-- The original breakout percentage query treats `price = open` as non-breakout, while its separate non-breakout count uses `price < open`. The supplied dataset has no equal-price rows, but the companion script uses a consistent definition.
-- The original monthly ETH question comment says 2007, while the dataset and SQL filter are for 2020. The companion comment corrects the year to 2020.
+- Reviewing record counts and date coverage for BTC and ETH.
+- Checking that each asset has one market observation per date.
+- Reviewing transaction identifiers and member references.
+- Parsing transaction dates consistently as day-month-year values.
+- Keeping the two asset types separate when comparing transaction quantities.
 
-A corrected companion script is provided as **[`add_CRYPTO.sql`](add_CRYPTO.sql)**. It retains the original table definitions and data inserts, corrects the transaction date masks, and revises the analysis queries while preserving their original business-question intent. The original `CRYPTO.sql` is unchanged.
+The analysis script is available in **[`add_CRYPTO.sql`](add_CRYPTO.sql)**. The CSV files are also included for reference and independent exploration.
 
 ## 4. Analysis performed
 
 ### A. Member and regional analysis
 
-Original questions include:
+Questions explored include:
 
 - Top three members alphabetically.
 - Members from the United States.
@@ -103,11 +100,9 @@ Original questions include:
 - Member count by region.
 - United States versus non-United States member counts.
 
-Some original SQL comments use the word “mentor”; the table and data are member records, so this README uses **member**.
-
 ### B. Market data coverage and quality
 
-Original questions include:
+Questions explored include:
 
 - Total price records and records per ticker.
 - Minimum and maximum market date for each ticker.
@@ -116,7 +111,7 @@ Original questions include:
 
 ### C. Price movement analysis
 
-Original questions include:
+Questions explored include:
 
 - Monthly average ETH price in 2020.
 - Number of breakout days where recorded `price > open`.
@@ -127,14 +122,14 @@ These are descriptive price-versus-open measures. They are not a full volatility
 
 ### D. Trading and member behaviour
 
-Original questions include:
+Questions explored include:
 
 - BTC buy and sell transaction counts.
 - Members with less than 500 BTC sold, ordered from the largest quantity sold to the smallest.
 - Member buy-to-sell ratio by quantity.
 - Top three members by BTC quantity at the end of the period.
 
-The corrected ratio is calculated **separately for BTC and ETH** because quantities of different cryptocurrencies are not directly comparable. The corrected top-three calculation is net recorded BTC transaction quantity (BUY minus SELL); it is not a verified wallet balance because no opening balance is supplied.
+The buy-to-sell ratio is calculated **separately for BTC and ETH** because quantities of different cryptocurrencies are not directly comparable. The top-three member analysis uses net recorded BTC transaction quantity (BUY minus SELL); it is not a verified wallet balance because no opening balance is supplied.
 
 ## 5. Quantitative findings
 
@@ -219,7 +214,7 @@ This is a net transaction-flow measure, not a wallet balance or proof of current
 Requirements: PostgreSQL.
 
 1. Create an empty PostgreSQL database.
-2. Run the corrected companion script:
+2. Run the SQL analysis script:
 
 ```bash
 psql -d your_database_name -f add_CRYPTO.sql
@@ -230,7 +225,7 @@ The script creates and populates the `prices`, `transactions`, and `members` tab
 ## 9. Limitations and next steps
 
 - The price currency is not documented in the repository.
-- `volume` and `change` are stored as text in the original price-table design; normalize them before numeric analysis.
+- `volume` and `change` are stored as text in the supplied price-table schema; normalize them before numeric analysis.
 - The definition and calculation basis of `percentage_fee` are not documented.
 - The daily market price should not be treated as the actual execution price for each transaction.
 - Net transaction quantity is not the same as a wallet balance because opening balances and transfers are not included.
@@ -242,8 +237,8 @@ The script creates and populates the `prices`, `transactions`, and `members` tab
 
 ```text
 SQL-Project-Crypto/
-├── CRYPTO.sql          # Original SQL script (preserved)
-├── add_CRYPTO.sql      # Corrected companion SQL script
+├── CRYPTO.sql          # SQL source script
+├── add_CRYPTO.sql      # PostgreSQL analysis and data-loading script
 ├── members.csv         # Member reference data
 ├── prices.csv          # 2020 BTC/ETH daily market observations
 ├── transactions.csv    # Buy/sell transaction source data
