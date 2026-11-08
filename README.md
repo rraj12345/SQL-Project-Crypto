@@ -194,7 +194,7 @@ This is a net transaction-flow measure, not a wallet balance or proof of current
 
 ## 6. Business interpretation
 
-- **Trading mix:** BUY transactions account for 4,183 of 5,047 transactions (about 82.92%); SELL transactions account for 864 (about 17.08%). This describes the records in the dataset, not platform-wide market demand.
+- **Trading mix:** BUY transactions account for 4,183 of 5,047 transactions (about 82.88%); SELL transactions account for 864 (about 17.12%). This describes the records in the dataset, not platform-wide market demand.
 - **Asset activity:** BTC has 2,806 transaction records versus 2,241 for ETH in this sample.
 - **Price-versus-open pattern:** BTC's recorded price is above open on 56.56% of days; ETH's is above open on 54.64%. This is a simple daily direction indicator, not a measure of return magnitude.
 - **Member footprint:** Half of the supplied member records are from the United States. The small 14-member sample is not sufficient to generalize to a full customer base.
