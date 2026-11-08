@@ -82,7 +82,7 @@ The audit identified the following:
 - `prices.csv` contains 732 rows: 366 BTC and 366 ETH observations.
 - Each ticker has 366 distinct market dates; no duplicate ticker/date pairs were found in the supplied price CSV.
 - `transactions.csv` contains 5,047 meaningful transaction records, but its header and rows also contain **four trailing empty columns**. Clean those columns before attempting a direct CSV import into the seven-column table.
-- The original SQL transaction inserts use slash-formatted dates while specifying a day-month-year format mask. The companion SQL corrects all **5,047 transaction date conversions** to the matching month/day/year mask.
+- The transaction insert dates appear in two textual forms: **1,944 slash-separated DD/MM/YYYY values** and **3,103 hyphen-separated DD-MM-YYYY values**. The companion SQL applies the matching date mask to all **5,047 transaction inserts**, consistent with the day-month-year dates in `transactions.csv`.
 - The original buy/sell ratio query counts transactions rather than summing quantities, and integer division can truncate the ratio.
 - The original final BTC quantity query adds BUY quantity in both branches of its `CASE` expression, so it does not subtract SELL quantity. It also has no descending sort before `LIMIT 3`.
 - The original breakout percentage query treats `price = open` as non-breakout, while its separate non-breakout count uses `price < open`. The supplied dataset has no equal-price rows, but the companion script uses a consistent definition.
