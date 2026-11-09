@@ -192,6 +192,7 @@ The `add_CRYPTO.sql` script creates the three tables, inserts the records, and r
 
 - The price currency is not specified in the supplied files.
 - `volume` and `change` are stored as text in the SQL table because the source values include suffixes and percentage signs.
+- The raw `transactions.csv` export contains four trailing empty columns after its seven meaningful fields; remove those empty columns if importing the CSV directly.
 - The meaning and calculation basis of `percentage_fee` are not documented.
 - The daily market price is not necessarily the execution price of an individual transaction.
 - Net transaction quantity is not equivalent to a wallet balance.
